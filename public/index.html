@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steam friendMapper</title>
+    <!-- Google Fonts VT323 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+    <!-- Cytoscape -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.23.0/cytoscape.min.js"></script>
+</head>
+<body>
+    <div class="search-container">
+        <input type="text" id="steam-id" placeholder="Enter Steam64 ID...">
+        <button id="search-btn">Map Network</button>
+    </div>
+
+    <div id="cy"></div>
+
+    <!-- Modals to show profile info on single-click -->
+    <div id="profile-panel" class="hidden">
+        <button id="close-panel">X</button>
+        <img id="panel-avatar" src="" alt="Avatar">
+        <h2 id="panel-name">Username</h2>
+        <p id="panel-status">Status</p>
+        <p><a id="panel-link" href="#" target="_blank">View Steam Profile</a></p>
+    </div>
+
+    <!-- App Logo -->
+    <div id="logo">
+        SteamAtlas
+        <div class="version">0.1 (Beta)</div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
