@@ -44,6 +44,25 @@ body, html { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidde
     border: 3px solid #66c0f4; margin-bottom: 10px;
 }
 
+/* Controls Legend */
+#controls-legend {
+    position: absolute;
+    bottom: 110px;
+    right: 40px;
+    z-index: 5;
+    font-family: 'VT323', monospace;
+    font-size: 1.5rem;
+    color: rgba(143, 152, 160, 0.6);
+    pointer-events: none; /* Let users click the graph through the text */
+    user-select: none;
+    text-align: right;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+}
+#controls-legend p {
+    margin: 4px 0;
+    font-family: 'VT323', monospace;
+}
+
 /* Base App Logo Overlay */
 #logo {
     position: absolute;
