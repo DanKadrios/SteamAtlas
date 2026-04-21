@@ -51,6 +51,24 @@ app.get('/api/owns/:steamId', async (req, res) => {
     }
 });
 
+// Search Steam Store for Game Names
+app.get('/api/search/:term', async (req, res) => {
+    try {
+        const { term } = req.params;
+        const url = `https://store.steampowered.com/api/storesearch/?term=${encodeURIComponent(term)}&l=english&cc=US`;
+        const response = await axios.get(url);
+        
+        let games = [];
+        if (response.data && response.data.items) {
+             games = response.data.items.slice(0, 5).map(item => item.name);
+        }
+        res.json({ games });
+    } catch (error) {
+        console.error('Error searching games:', error.message);
+        res.json({ games: [] });
+    }
+});
+
 // Fetch User Summary (Avatar, Name, etc.)
 app.get('/api/user/:steamId', async (req, res) => {
     try {

@@ -17,7 +17,10 @@
     <div class="search-container">
         <input type="text" id="steam-id" placeholder="SteamID or Vanity URL...">
         <button id="search-btn">Map Network</button>
-        <input type="text" id="game-filter" placeholder="Filter owned games...">
+        <div class="autocomplete-wrapper">
+            <input type="text" id="game-filter" placeholder="Filter owned games..." autocomplete="off">
+            <div id="autocomplete-dropdown" class="autocomplete-items hidden"></div>
+        </div>
         <button id="filter-btn">Filter Games</button>
     </div>
 
@@ -46,7 +49,7 @@
         SteamAtlas
         <div class="version">
             <button id="changelog-btn">Changelog</button>
-            0.3 (Beta)
+            0.3.1 (Beta)
         </div>
     </div>
 
@@ -55,6 +58,10 @@
         <button id="close-changelog">X</button>
         <h2>Changelog</h2>
         <div class="changelog-content">
+            <h3>v0.3.1</h3>
+            <ul>
+                <li>Added auto-completing dropdown when searching owned games (top 5 matches)</li>
+            </ul>
             <h3>v0.3</h3>
             <ul>
                 <li>Added Vanity URL resolution</li>

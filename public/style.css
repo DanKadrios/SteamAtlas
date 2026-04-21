@@ -17,10 +17,42 @@ body, html { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidde
     padding: 10px; border-radius: 4px; border: 1px solid #3c4f6b;
     background: #171a21; color: white; width: 220px;
 }
+.autocomplete-wrapper {
+    position: relative;
+    display: inline-block;
+    margin-left: 10px;
+}
 #game-filter {
     padding: 10px; border-radius: 4px; border: 1px solid #3c4f6b;
     background: #171a21; color: #a3cc69; width: 200px;
-    margin-left: 10px;
+    margin-left: 0;
+}
+.autocomplete-items {
+    position: absolute;
+    border: 1px solid #3c4f6b;
+    border-top: none;
+    z-index: 99;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #171a21;
+    border-radius: 0 0 4px 4px;
+    overflow: hidden;
+    box-shadow: 0px 4px 6px rgba(0,0,0,0.3);
+}
+.autocomplete-item {
+    padding: 10px;
+    cursor: pointer;
+    color: #a3cc69;
+    border-bottom: 1px solid #2a475e;
+    transition: background-color 0.2s, color 0.2s;
+}
+.autocomplete-item:last-child {
+    border-bottom: none;
+}
+.autocomplete-item:hover {
+    background-color: #2a475e;
+    color: white;
 }
 #search-btn, #filter-btn {
     padding: 10px 15px; border-radius: 4px; border: none;

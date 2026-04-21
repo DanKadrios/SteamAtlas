@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const steamInput = document.getElementById('steam-id');
     const gameFilter = document.getElementById('game-filter');
     const filterBtn = document.getElementById('filter-btn');
+    const autocompleteDropdown = document.getElementById('autocomplete-dropdown');
     const panel = document.getElementById('profile-panel');
     const closePanel = document.getElementById('close-panel');
     const changelogBtn = document.getElementById('changelog-btn');
@@ -416,8 +417,57 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     if (filterBtn && gameFilter) {
+        let debounceTimer;
+        
+        gameFilter.addEventListener('input', (e) => {
+            const query = e.target.value.trim();
+            if (!query) {
+                autocompleteDropdown.innerHTML = '';
+                autocompleteDropdown.classList.add('hidden');
+                return;
+            }
+
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(async () => {
+                try {
+                    const res = await fetch(`/api/search/${encodeURIComponent(query)}`);
+                    const data = await res.json();
+                    
+                    if (data.games && data.games.length > 0) {
+                        autocompleteDropdown.innerHTML = '';
+                        data.games.forEach(gameName => {
+                            const div = document.createElement('div');
+                            div.className = 'autocomplete-item';
+                            div.textContent = gameName;
+                            div.addEventListener('click', () => {
+                                gameFilter.value = gameName;
+                                autocompleteDropdown.classList.add('hidden');
+                                filterBtn.click(); // Auto-filter on click
+                            });
+                            autocompleteDropdown.appendChild(div);
+                        });
+                        autocompleteDropdown.classList.remove('hidden');
+                    } else {
+                        autocompleteDropdown.classList.add('hidden');
+                    }
+                } catch (err) {
+                    console.error('Error fetching autocomplete games:', err);
+                }
+            }, 300); // 300ms debounce
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (e.target !== gameFilter && e.target !== autocompleteDropdown) {
+                autocompleteDropdown.classList.add('hidden');
+            }
+        });
+
         gameFilter.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') filterBtn.click();
+            if (e.key === 'Enter') {
+                autocompleteDropdown.classList.add('hidden');
+                filterBtn.click();
+            }
         });
 
         filterBtn.addEventListener('click', async () => {
