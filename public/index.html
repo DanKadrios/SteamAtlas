@@ -15,8 +15,10 @@
 </head>
 <body>
     <div class="search-container">
-        <input type="text" id="steam-id" placeholder="Enter Steam64 ID...">
+        <input type="text" id="steam-id" placeholder="SteamID or Vanity URL...">
         <button id="search-btn">Map Network</button>
+        <input type="text" id="game-filter" placeholder="Filter owned games...">
+        <button id="filter-btn">Filter Games</button>
     </div>
 
     <div id="cy"></div>
@@ -26,6 +28,8 @@
         <button id="close-panel">X</button>
         <img id="panel-avatar" src="" alt="Avatar">
         <h2 id="panel-name">Username</h2>
+        <p id="panel-level">Level: ?</p>
+        <p id="panel-game" class="hidden">Playing: </p>
         <p id="panel-status">Status</p>
         <p><a id="panel-link" href="#" target="_blank">View Steam Profile</a></p>
     </div>
@@ -40,7 +44,36 @@
     <!-- App Logo -->
     <div id="logo">
         SteamAtlas
-        <div class="version">0.2 (Beta)</div>
+        <div class="version">
+            <button id="changelog-btn">Changelog</button>
+            0.3 (Beta)
+        </div>
+    </div>
+
+    <!-- Changelog Modal -->
+    <div id="changelog-modal" class="hidden">
+        <button id="close-changelog">X</button>
+        <h2>Changelog</h2>
+        <div class="changelog-content">
+            <h3>v0.3</h3>
+            <ul>
+                <li>Added Vanity URL resolution</li>
+                <li>Added Game filtering</li>
+                <li>Added Steam Level fetching</li>
+            </ul>
+            <h3>v0.2</h3>
+            <ul>
+                <li>Added double-click network expansion</li>
+                <li>Added Shift-click multi-selection for mutual friends</li>
+                <li>Added controls legend and version indicator</li>
+            </ul>
+            <h3>v0.1</h3>
+            <ul>
+                <li>Initial release</li>
+                <li>Basic Steam friends network mapping</li>
+                <li>Single-click profile viewing</li>
+            </ul>
+        </div>
     </div>
 
     <script src="app.js"></script>

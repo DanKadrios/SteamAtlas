@@ -15,13 +15,19 @@ body, html { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidde
 
 #steam-id {
     padding: 10px; border-radius: 4px; border: 1px solid #3c4f6b;
-    background: #171a21; color: white; width: 250px;
+    background: #171a21; color: white; width: 220px;
 }
-#search-btn {
+#game-filter {
+    padding: 10px; border-radius: 4px; border: 1px solid #3c4f6b;
+    background: #171a21; color: #a3cc69; width: 200px;
+    margin-left: 10px;
+}
+#search-btn, #filter-btn {
     padding: 10px 15px; border-radius: 4px; border: none;
     background: #66c0f4; color: black; font-weight: bold; cursor: pointer;
 }
-#search-btn:hover { background: #4ba8dd; }
+#search-btn:hover, #filter-btn:hover { background: #4ba8dd; }
+#filter-btn:disabled { background: #456d85; color: #aaa; cursor: not-allowed; }
 
 #cy {
     width: 100%; height: 100%; display: block;
@@ -34,7 +40,7 @@ body, html { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidde
     box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 2px solid #66c0f4;
     text-align: center; color: white;
 }
-#profile-panel.hidden { display: none; }
+.hidden, #profile-panel.hidden, #changelog-modal.hidden { display: none !important; }
 #close-panel {
     position: absolute; top: 10px; right: 10px; background: none; border: none;
     color: white; cursor: pointer; font-size: 16px;
@@ -84,8 +90,51 @@ body, html { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidde
     font-family: 'VT323', monospace;
     color: rgba(143, 152, 160, 0.6);
     margin-top: 5px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
 }
+
+#changelog-btn {
+    font-family: 'VT323', monospace;
+    background: transparent;
+    color: rgba(143, 152, 160, 0.6);
+    border: 1px solid rgba(143, 152, 160, 0.4);
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 10px;
+    font-size: 1.1rem;
+    pointer-events: auto; /* Make it clickable inside the logo div */
+    transition: all 0.2s;
+    padding: 0 4px;
+}
+#changelog-btn:hover {
+    background: rgba(143, 152, 160, 0.2);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Changelog Modal */
+#changelog-modal {
+    position: absolute;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 400px; max-height: 80vh;
+    background: #2a475e; padding: 25px; border-radius: 8px;
+    box-shadow: 0 4px 25px rgba(0,0,0,0.8); border: 2px solid #66c0f4;
+    color: white; z-index: 50; overflow-y: auto; text-align: left;
+    font-family: sans-serif;
+}
+#changelog-modal.hidden { display: none; }
+#changelog-modal h2 { margin-top: 0; color: #66c0f4; }
+#close-changelog {
+    position: absolute; top: 10px; right: 10px; background: none; border: none;
+    color: white; cursor: pointer; font-size: 16px;
+}
+.changelog-content h3 { color: #66c0f4; margin-bottom: 5px; margin-top: 15px; font-size: 1.1rem;}
+.changelog-content ul { margin-top: 0; padding-left: 20px; color: #c7d5e0; font-size: 0.9rem; }
+
 #panel-name { font-size: 1.2rem; margin: 5px 0; }
-#panel-status { color: #8f98a0; font-size: 0.9rem; margin-bottom: 15px; }
+#panel-level { color: #fff; font-weight: bold; margin: 0 0 5px 0; }
+#panel-status { color: #8f98a0; font-size: 0.9rem; margin-bottom: 10px; margin-top: 0; }
+#panel-game { color: #a3cc69; font-size: 0.9rem; margin-top: 5px; margin-bottom: 15px; font-weight: bold; }
 #panel-link { color: #66c0f4; text-decoration: none; }
 #panel-link:hover { text-decoration: underline; }

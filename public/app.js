@@ -1,8 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
     const searchBtn = document.getElementById('search-btn');
     const steamInput = document.getElementById('steam-id');
+    const gameFilter = document.getElementById('game-filter');
+    const filterBtn = document.getElementById('filter-btn');
     const panel = document.getElementById('profile-panel');
     const closePanel = document.getElementById('close-panel');
+    const changelogBtn = document.getElementById('changelog-btn');
+    const changelogModal = document.getElementById('changelog-modal');
+    const closeChangelog = document.getElementById('close-changelog');
 
     let cy;
 
@@ -61,6 +66,19 @@ document.addEventListener('DOMContentLoaded', () => {
                         'border-color': '#90ee90',
                         'border-width': 4
                     }
+                },
+                {
+                    selector: 'node.dimmed',
+                    style: {
+                        'opacity': 0.1,
+                        'border-width': 0
+                    }
+                },
+                {
+                    selector: 'edge.dimmed',
+                    style: {
+                        'opacity': 0.05
+                    }
                 }
             ],
             layout: { name: 'cose', animate: true }
@@ -92,11 +110,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const mapFriendsNetwork = async (rootSteamId) => {
+    const mapFriendsNetwork = async (queryId) => {
+        let rootSteamId = queryId;
+
+        // Check if query is a vanity URL instead of a 64-bit ID
+        if (!/^\d{17}$/.test(queryId)) {
+            try {
+                const res = await fetch(`/api/resolve/${queryId}`);
+                const data = await res.json();
+                if (data.steamid) {
+                    rootSteamId = data.steamid;
+                } else {
+                    alert("Could not resolve Vanity URL to a Steam64 ID.");
+                    return;
+                }
+            } catch (err) {
+                alert("Error resolving Vanity URL.");
+                return;
+            }
+        }
+
         // Fetch root user
         const rootUser = await fetchUser(rootSteamId);
         if (!rootUser || !rootUser.steamid) {
-            alert("Could not find user. Make sure it's a valid 64-bit Steam ID.");
+            alert("Could not find user.");
             return;
         }
 
@@ -104,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!cy) initCytoscape();
 
         // Clear existing map when searching a new root user manually via the bar
-        if (steamInput.value === rootSteamId) {
+        if (steamInput.value === queryId) {
              cy.elements().remove();
         }
 
@@ -133,7 +170,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         label: friend.personaname || friend.steamid,
                         avatar: friend.avatarfull,
                         profileUrl: friend.profileurl,
-                        status: getStatusText(friend.personastate)
+                        status: getStatusText(friend.personastate),
+                        game: friend.gameextrainfo || ''
                     }
                 });
             }
@@ -173,7 +211,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     label: user.personaname,
                     avatar: user.avatarfull,
                     profileUrl: user.profileurl,
-                    status: getStatusText(user.personastate)
+                    status: getStatusText(user.personastate),
+                    game: user.gameextrainfo || ''
                 }
             });
 
@@ -274,6 +313,29 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('panel-avatar').src = node.data('avatar') || '';
             document.getElementById('panel-status').textContent = `Status: ${node.data('status') || 'Offline'}`;
             document.getElementById('panel-link').href = node.data('profileUrl') || '#';
+
+            const game = node.data('game');
+            const gameEl = document.getElementById('panel-game');
+            if (game) {
+                gameEl.textContent = `Playing: ${game}`;
+                gameEl.classList.remove('hidden');
+            } else {
+                gameEl.classList.add('hidden');
+            }
+
+            document.getElementById('panel-level').textContent = 'Level: Loading...';
+            // Fetch level async
+            fetch(`/api/level/${node.id()}`).then(r => r.json())
+                .then(data => {
+                    // Make sure the node is still selected when the fetch completes
+                    if (node.hasClass('selected')) {
+                        document.getElementById('panel-level').textContent = `Level: ${data.player_level !== undefined ? data.player_level : '?'}`;
+                    }
+                })
+                .catch(e => {
+                    document.getElementById('panel-level').textContent = 'Level: ?';
+                });
+
         } else {
             // Multiple nodes selected
             panel.classList.add('hidden'); // Hide info box
@@ -331,6 +393,82 @@ document.addEventListener('DOMContentLoaded', () => {
             panel.classList.add('hidden'); // Close panel on new search
         }
     });
+
+    const gamesCache = new Map();
+
+    const checkGameOwnership = async (steamId, query) => {
+        let games = [];
+        if (gamesCache.has(steamId)) {
+            games = gamesCache.get(steamId);
+        } else {
+            try {
+                const res = await fetch(`/api/owns/${steamId}`);
+                const data = await res.json();
+                games = data.games || [];
+                gamesCache.set(steamId, games);
+            } catch (err) {
+                games = [];
+                gamesCache.set(steamId, games);
+            }
+        }
+        
+        return games.some(g => g.name && g.name.toLowerCase().includes(query));
+    };
+
+    if (filterBtn && gameFilter) {
+        gameFilter.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') filterBtn.click();
+        });
+
+        filterBtn.addEventListener('click', async () => {
+            const query = gameFilter.value.toLowerCase().trim();
+            cy.elements().removeClass('dimmed');
+            
+            if (!query) return;
+
+            const nodes = cy.nodes();
+            
+            // Show a small UI indication if desired, or just wait (fetch might take a moment if not cached)
+            const oldText = filterBtn.innerText;
+            filterBtn.innerText = 'Filtering...';
+            filterBtn.disabled = true;
+
+            const ownershipChecks = await Promise.allSettled(
+                nodes.map(node => 
+                    checkGameOwnership(node.id(), query).then(owns => ({
+                        node,
+                        owns
+                    }))
+                )
+            );
+
+            const nonMatches = [];
+            ownershipChecks.forEach(result => {
+                if (result.status === 'fulfilled' && !result.value.owns) {
+                    nonMatches.push(result.value.node);
+                }
+            });
+
+            const nonMatchesCollection = cy.collection(nonMatches);
+            nonMatchesCollection.addClass('dimmed');
+            nonMatchesCollection.connectedEdges().addClass('dimmed');
+
+            filterBtn.innerText = oldText;
+            filterBtn.disabled = false;
+        });
+    }
+
+    if (changelogBtn && changelogModal) {
+        changelogBtn.addEventListener('click', () => {
+            changelogModal.classList.remove('hidden');
+        });
+    }
+
+    if (closeChangelog && changelogModal) {
+        closeChangelog.addEventListener('click', () => {
+            changelogModal.classList.add('hidden');
+        });
+    }
 
     initCytoscape();
 });

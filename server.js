@@ -10,6 +10,47 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Resolve Vanity URL to 64-bit Steam ID
+app.get('/api/resolve/:vanity', async (req, res) => {
+    try {
+        const { vanity } = req.params;
+        const url = `http://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=${process.env.STEAM_API_KEY}&vanityurl=${vanity}`;
+        const response = await axios.get(url);
+        if (response.data.response.success === 1) {
+            res.json({ steamid: response.data.response.steamid });
+        } else {
+            res.status(404).json({ error: 'Vanity URL not found' });
+        }
+    } catch (error) {
+        console.error('Error resolving vanity URL:', error.message);
+        res.status(500).json({ error: 'Failed to resolve Vanity URL' });
+    }
+});
+
+// Fetch Steam Level
+app.get('/api/level/:steamId', async (req, res) => {
+    try {
+        const { steamId } = req.params;
+        const url = `http://api.steampowered.com/IPlayerService/GetSteamLevel/v1/?key=${process.env.STEAM_API_KEY}&steamid=${steamId}`;
+        const response = await axios.get(url);
+        res.json({ player_level: response.data.response.player_level });
+    } catch (error) {
+        res.json({ player_level: '?' }); // Probably private or rate limited
+    }
+});
+
+// Fetch Owned Games
+app.get('/api/owns/:steamId', async (req, res) => {
+    try {
+        const { steamId } = req.params;
+        const url = `http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${process.env.STEAM_API_KEY}&steamid=${steamId}&include_appinfo=1`;
+        const response = await axios.get(url);
+        res.json({ games: response.data.response.games || [] });
+    } catch (error) {
+        res.json({ games: [] }); // Private profile or error
+    }
+});
+
 // Fetch User Summary (Avatar, Name, etc.)
 app.get('/api/user/:steamId', async (req, res) => {
     try {
