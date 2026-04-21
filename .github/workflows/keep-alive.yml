@@ -1,0 +1,15 @@
+name: Keep Render Instance Alive
+
+on:
+  schedule:
+    # Runs every 14 minutes to prevent Render's 15-minute idle timeout
+    - cron: '*/14 * * * *'
+  workflow_dispatch: # Allows you to manually trigger it from the GitHub Actions tab
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping SteamAtlas
+        # Replace the URL below with your actual deployed Render URL if it differs
+        run: curl -s https://steamatlas.onrender.com > /dev/null
