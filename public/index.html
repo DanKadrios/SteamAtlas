@@ -15,14 +15,29 @@
 </head>
 <body>
     <div class="search-container">
-        <input type="text" id="steam-id" placeholder="SteamID or Vanity URL...">
-        <button id="search-btn">Map Network</button>
-        <div class="autocomplete-wrapper">
-            <input type="text" id="game-filter" placeholder="Filter owned games..." autocomplete="off">
-            <div id="autocomplete-dropdown" class="autocomplete-items hidden"></div>
+        <button id="toggle-left" class="toggle-btn" title="Toggle Search Panel">▼</button>
+        <div id="search-content" class="panel-content">
+            <input type="text" id="steam-id" placeholder="SteamID or Vanity URL...">
+            <button id="search-btn">Map Network</button>
+            <div class="autocomplete-wrapper">
+                <input type="text" id="game-filter" placeholder="Filter owned games..." autocomplete="off">
+                <div id="autocomplete-dropdown" class="autocomplete-items hidden"></div>
+            </div>
+            <button id="filter-btn">Filter Games</button>
+            <input type="text" id="local-search" placeholder="Find user on map...">
         </div>
-        <button id="filter-btn">Filter Games</button>
-        <input type="text" id="local-search" placeholder="Find user on map...">
+    </div>
+
+    <!-- View Mode Controls -->
+    <div id="view-controls">
+        <button id="toggle-right" class="toggle-btn" title="Toggle View Controls">▼</button>
+        <div id="view-content" class="panel-content">
+            <label for="graph-mode" style="color: #a3cc69; font-weight: bold; margin-right: 5px;">View:</label>
+            <select id="graph-mode">
+                <option value="network">Network Web (Default)</option>
+                <option value="age">Statistics: Account Age</option>
+            </select>
+        </div>
     </div>
 
     <div id="cy"></div>
@@ -33,6 +48,7 @@
         <img id="panel-avatar" src="" alt="Avatar">
         <h2 id="panel-name">Username</h2>
         <p id="panel-level">Level: ?</p>
+        <p id="panel-age">Created: ?</p>
         <p id="panel-game" class="hidden">Playing: </p>
         <p id="panel-status">Status</p>
         <p><a id="panel-link" href="#" target="_blank">View Steam Profile</a></p>
@@ -50,7 +66,7 @@
         SteamAtlas
         <div class="version">
             <button id="changelog-btn">Changelog</button>
-            0.4 (Beta)
+            0.5 (Beta)
         </div>
     </div>
 
@@ -59,6 +75,12 @@
         <button id="close-changelog">X</button>
         <h2>Changelog</h2>
         <div class="changelog-content">
+            <h3>v0.5</h3>
+            <ul>
+                <li>Added View Mode controls to switch between Network Web and Account Age Statistics</li>
+                <li>Added Account Age Scatter Plot (X-Axis: Rank, Y-Axis: Age)</li>
+                <li>Profile panel now displays Account Creation Date</li>
+            </ul>
             <h3>v0.4</h3>
             <ul>
                 <li>Added live-search to find mapped friends by name or ID</li>

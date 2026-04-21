@@ -5,11 +5,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterBtn = document.getElementById('filter-btn');
     const autocompleteDropdown = document.getElementById('autocomplete-dropdown');
     const localSearch = document.getElementById('local-search');
+    const graphMode = document.getElementById('graph-mode');
     const panel = document.getElementById('profile-panel');
     const closePanel = document.getElementById('close-panel');
     const changelogBtn = document.getElementById('changelog-btn');
     const changelogModal = document.getElementById('changelog-modal');
     const closeChangelog = document.getElementById('close-changelog');
+
+    const toggleLeftBtn = document.getElementById('toggle-left');
+    const searchContent = document.getElementById('search-content');
+    const toggleRightBtn = document.getElementById('toggle-right');
+    const viewContent = document.getElementById('view-content');
 
     let cy;
 
@@ -80,6 +86,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     selector: 'edge.dimmed',
                     style: {
                         'opacity': 0.05
+                    }
+                },
+                {
+                    selector: 'edge.hidden-edge',
+                    style: {
+                        'display': 'none'
                     }
                 }
             ],
@@ -173,7 +185,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         avatar: friend.avatarfull,
                         profileUrl: friend.profileurl,
                         status: getStatusText(friend.personastate),
-                        game: friend.gameextrainfo || ''
+                        game: friend.gameextrainfo || '',
+                        timecreated: friend.timecreated || 0
                     }
                 });
             }
@@ -214,7 +227,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     avatar: user.avatarfull,
                     profileUrl: user.profileurl,
                     status: getStatusText(user.personastate),
-                    game: user.gameextrainfo || ''
+                    game: user.gameextrainfo || '',
+                    timecreated: user.timecreated || 0
                 }
             });
 
@@ -226,6 +240,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const applyLayout = () => {
+        if (graphMode && graphMode.value === 'age') {
+            applyAgeLayout();
+            return;
+        }
+        
+        cy.edges().removeClass('hidden-edge');
         const layout = cy.layout({
             name: 'cose',
             idealEdgeLength: 100,
@@ -239,6 +259,53 @@ document.addEventListener('DOMContentLoaded', () => {
             edgeElasticity: 100,
             nestingFactor: 5,
             animate: true
+        });
+        layout.run();
+    };
+
+    const applyAgeLayout = () => {
+        cy.edges().addClass('hidden-edge');
+        
+        const validNodes = [];
+        const invalidNodes = [];
+        
+        cy.nodes().forEach(node => {
+            const tc = node.data('timecreated');
+            if (tc > 0) validNodes.push({ id: node.id(), tc: tc });
+            else invalidNodes.push(node.id());
+        });
+
+        // Sort by oldest first
+        validNodes.sort((a, b) => a.tc - b.tc);
+
+        let minTime = 0, timeRange = 1;
+        if (validNodes.length > 0) {
+            minTime = validNodes[0].tc;
+            const maxTime = validNodes[validNodes.length - 1].tc;
+            timeRange = maxTime - minTime || 1;
+        }
+
+        const graphHeight = 800;
+        const xSpacing = 100;
+
+        const layout = cy.layout({
+            name: 'preset',
+            animate: true,
+            fit: true,
+            padding: 50,
+            positions: (node) => {
+                const id = node.id();
+                const tc = node.data('timecreated');
+                if (!tc || tc === 0) {
+                    const idx = invalidNodes.indexOf(id);
+                    return { x: (idx + 1) * xSpacing, y: graphHeight + 200 }; // Push invalid below the main graph
+                } else {
+                    const idx = validNodes.findIndex(n => n.id === id);
+                    const rank = idx + 1; // 1st = Oldest, furthest left
+                    const yPos = ((tc - minTime) / timeRange) * graphHeight; // 0 = Oldest = Top, graphHeight = Newest = Bottom
+                    return { x: rank * xSpacing, y: yPos };
+                }
+            }
         });
         layout.run();
     };
@@ -324,6 +391,14 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 gameEl.classList.add('hidden');
             }
+
+            const tc = node.data('timecreated');
+            let ageStr = "Private/Unknown";
+            if (tc) {
+                const date = new Date(tc * 1000);
+                ageStr = date.toLocaleDateString();
+            }
+            document.getElementById('panel-age').textContent = `Created: ${ageStr}`;
 
             document.getElementById('panel-level').textContent = 'Level: Loading...';
             // Fetch level async
@@ -537,6 +612,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 nonMatches.addClass('dimmed');
                 nonMatches.connectedEdges().addClass('dimmed');
             }
+        });
+    }
+
+    if (toggleLeftBtn && searchContent) {
+        toggleLeftBtn.addEventListener('click', () => {
+            searchContent.classList.toggle('hidden');
+            toggleLeftBtn.textContent = searchContent.classList.contains('hidden') ? '▲' : '▼';
+        });
+    }
+
+    if (toggleRightBtn && viewContent) {
+        toggleRightBtn.addEventListener('click', () => {
+            viewContent.classList.toggle('hidden');
+            toggleRightBtn.textContent = viewContent.classList.contains('hidden') ? '▲' : '▼';
+        });
+    }
+
+    if (graphMode) {
+        graphMode.addEventListener('change', () => {
+            applyLayout();
         });
     }
 

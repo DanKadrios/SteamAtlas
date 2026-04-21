@@ -7,10 +7,33 @@ body, html { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidde
     left: 20px;
     z-index: 10;
     background: rgba(0,0,0,0.7);
-    padding: 15px;
+    padding: 10px 15px;
     border-radius: 8px;
     display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+}
+.panel-content {
+    display: flex;
+    align-items: center;
     gap: 10px;
+}
+.toggle-btn {
+    background: transparent;
+    color: #66c0f4;
+    border: none;
+    cursor: pointer;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+    transition: color 0.2s;
+}
+.toggle-btn:hover {
+    color: #a3cc69;
 }
 
 #steam-id {
@@ -31,6 +54,29 @@ body, html { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidde
     padding: 10px; border-radius: 4px; border: 1px solid #3c4f6b;
     background: #171a21; color: white; width: 180px;
     margin-left: 10px;
+}
+#view-controls {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
+    background: rgba(0,0,0,0.7);
+    padding: 10px 15px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+}
+#graph-mode {
+    padding: 8px; 
+    border-radius: 4px; 
+    border: 1px solid #3c4f6b;
+    background: #171a21; 
+    color: white; 
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 1rem;
 }
 .autocomplete-items {
     position: absolute;
@@ -76,6 +122,9 @@ body, html { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidde
     width: 250px; background: #2a475e; padding: 20px; border-radius: 8px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 2px solid #66c0f4;
     text-align: center; color: white;
+}
+.panel-content.hidden {
+    display: none !important;
 }
 .hidden, #profile-panel.hidden, #changelog-modal.hidden { display: none !important; }
 #close-panel {
