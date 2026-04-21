@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const gameFilter = document.getElementById('game-filter');
     const filterBtn = document.getElementById('filter-btn');
     const autocompleteDropdown = document.getElementById('autocomplete-dropdown');
+    const localSearch = document.getElementById('local-search');
     const panel = document.getElementById('profile-panel');
     const closePanel = document.getElementById('close-panel');
     const changelogBtn = document.getElementById('changelog-btn');
@@ -117,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Check if query is a vanity URL instead of a 64-bit ID
         if (!/^\d{17}$/.test(queryId)) {
             try {
-                const res = await fetch(`/api/resolve/${queryId}`);
+                const res = await fetch(`/api/resolve/${encodeURIComponent(queryId)}`);
                 const data = await res.json();
                 if (data.steamid) {
                     rootSteamId = data.steamid;
@@ -517,6 +518,25 @@ document.addEventListener('DOMContentLoaded', () => {
     if (closeChangelog && changelogModal) {
         closeChangelog.addEventListener('click', () => {
             changelogModal.classList.add('hidden');
+        });
+    }
+
+    if (localSearch) {
+        localSearch.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            cy.elements().removeClass('dimmed');
+            
+            if (query) {
+                const nonMatches = cy.nodes().filter(node => {
+                    const label = (node.data('label') || '').toLowerCase();
+                    const id = (node.data('id') || '').toLowerCase();
+                    return !label.includes(query) && !id.includes(query);
+                });
+                
+                // Dim non-matching nodes and edges
+                nonMatches.addClass('dimmed');
+                nonMatches.connectedEdges().addClass('dimmed');
+            }
         });
     }
 

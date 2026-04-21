@@ -27,6 +27,11 @@ body, html { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidde
     background: #171a21; color: #a3cc69; width: 200px;
     margin-left: 0;
 }
+#local-search {
+    padding: 10px; border-radius: 4px; border: 1px solid #3c4f6b;
+    background: #171a21; color: white; width: 180px;
+    margin-left: 10px;
+}
 .autocomplete-items {
     position: absolute;
     border: 1px solid #3c4f6b;

@@ -14,7 +14,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get('/api/resolve/:vanity', async (req, res) => {
     try {
         const { vanity } = req.params;
-        const url = `http://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=${process.env.STEAM_API_KEY}&vanityurl=${vanity}`;
+        const url = `http://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=${process.env.STEAM_API_KEY}&vanityurl=${encodeURIComponent(vanity)}`;
         const response = await axios.get(url);
         if (response.data.response.success === 1) {
             res.json({ steamid: response.data.response.steamid });
