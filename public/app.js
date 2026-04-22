@@ -239,50 +239,92 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const applyLayout = () => {
-        if (graphMode && graphMode.value === 'age') {
-            applyAgeLayout();
-            return;
-        }
-        
-        cy.edges().removeClass('hidden-edge');
-        const layout = cy.layout({
-            name: 'cose',
-            idealEdgeLength: 100,
-            nodeOverlap: 20,
-            refresh: 20,
-            fit: true,
-            padding: 30,
-            randomize: false,
-            componentSpacing: 100,
-            nodeRepulsion: 400000,
-            edgeElasticity: 100,
-            nestingFactor: 5,
-            animate: true
+    const fetchLevels = async () => {
+        const promises = [];
+        cy.nodes().forEach(node => {
+            const id = node.id();
+            if (node.data('level') === undefined) {
+                promises.push(
+                    fetch(`/api/level/${id}`).then(r => r.json())
+                    .then(d => { node.data('level', d.player_level !== undefined ? d.player_level : -1); })
+                    .catch(() => { node.data('level', -1); })
+                );
+            }
         });
-        layout.run();
+        await Promise.all(promises);
     };
 
-    const applyAgeLayout = () => {
+    const fetchGamesData = async () => {
+        const promises = [];
+        cy.nodes().forEach(node => {
+            const id = node.id();
+            if (node.data('playtime') === undefined) {
+                let p;
+                if (gamesCache.has(id)) {
+                    p = Promise.resolve(gamesCache.get(id));
+                } else {
+                    p = fetch(`/api/owns/${id}`).then(r => r.json())
+                    .then(d => {
+                        const games = d.games || [];
+                        gamesCache.set(id, games);
+                        return games;
+                    }).catch(() => []);
+                }
+                promises.push(p.then(games => {
+                    node.data('library', games.length);
+                    const totalMins = games.reduce((acc, g) => acc + (g.playtime_forever || 0), 0);
+                    node.data('playtime', Math.round(totalMins / 60));
+                }));
+            }
+        });
+        await Promise.all(promises);
+    };
+
+    const setNodeSizes = (mode) => {
+        if (mode === 'popularity') {
+            let maxDeg = 1;
+            cy.nodes().forEach(node => {
+                const deg = node.degree(false);
+                if (deg > maxDeg) maxDeg = deg;
+                node.data('popularity', deg);
+            });
+            cy.nodes().forEach(node => {
+                const pop = node.data('popularity');
+                const size = 40 + ((pop / maxDeg) * 80); // Scale from 40 to 120
+                node.style('width', size);
+                node.style('height', size);
+            });
+        } else {
+            cy.nodes().forEach(node => {
+                node.style('width', '');
+                node.style('height', '');
+            });
+        }
+    };
+
+    const applyRankedLayout = (statField, higherIsBetter) => {
         cy.edges().addClass('hidden-edge');
         
         const validNodes = [];
         const invalidNodes = [];
         
         cy.nodes().forEach(node => {
-            const tc = node.data('timecreated');
-            if (tc > 0) validNodes.push({ id: node.id(), tc: tc });
+            const val = node.data(statField);
+            if (val !== undefined && val > 0) validNodes.push({ id: node.id(), val: val });
             else invalidNodes.push(node.id());
         });
 
-        // Sort by oldest first
-        validNodes.sort((a, b) => a.tc - b.tc);
+        if (higherIsBetter) {
+            validNodes.sort((a, b) => b.val - a.val); // Descending (Highest first)
+        } else {
+            validNodes.sort((a, b) => a.val - b.val); // Ascending (Oldest timestamp first)
+        }
 
-        let minTime = 0, timeRange = 1;
+        let headVal = 0, tailVal = 1, valRange = 1;
         if (validNodes.length > 0) {
-            minTime = validNodes[0].tc;
-            const maxTime = validNodes[validNodes.length - 1].tc;
-            timeRange = maxTime - minTime || 1;
+            headVal = validNodes[0].val;
+            tailVal = validNodes[validNodes.length - 1].val;
+            valRange = Math.abs(headVal - tailVal) || 1;
         }
 
         const graphHeight = 800;
@@ -295,19 +337,67 @@ document.addEventListener('DOMContentLoaded', () => {
             padding: 50,
             positions: (node) => {
                 const id = node.id();
-                const tc = node.data('timecreated');
-                if (!tc || tc === 0) {
+                const val = node.data(statField);
+                
+                if (val === undefined || val <= 0) {
                     const idx = invalidNodes.indexOf(id);
-                    return { x: (idx + 1) * xSpacing, y: graphHeight + 200 }; // Push invalid below the main graph
+                    return { x: (idx + 1) * xSpacing, y: graphHeight + 200 };
                 } else {
                     const idx = validNodes.findIndex(n => n.id === id);
-                    const rank = idx + 1; // 1st = Oldest, furthest left
-                    const yPos = ((tc - minTime) / timeRange) * graphHeight; // 0 = Oldest = Top, graphHeight = Newest = Bottom
+                    const rank = idx + 1; 
+                    const yPos = (Math.abs(val - headVal) / valRange) * graphHeight;
                     return { x: rank * xSpacing, y: yPos };
                 }
             }
         });
         layout.run();
+    };
+
+    const applyLayout = async () => {
+        if (!graphMode) return;
+        const mode = graphMode.value;
+        const prevText = graphMode.options[graphMode.selectedIndex].text;
+        graphMode.disabled = true;
+        graphMode.options[graphMode.selectedIndex].text = "Loading...";
+
+        try {
+            setNodeSizes(mode);
+
+            if (mode === 'level') {
+                await fetchLevels();
+                applyRankedLayout('level', true);
+            } else if (mode === 'playtime') {
+                await fetchGamesData();
+                applyRankedLayout('playtime', true);
+            } else if (mode === 'library') {
+                await fetchGamesData();
+                applyRankedLayout('library', true);
+            } else if (mode === 'age') {
+                applyRankedLayout('timecreated', false);
+            } else {
+                cy.edges().removeClass('hidden-edge');
+                const layout = cy.layout({
+                    name: 'cose',
+                    idealEdgeLength: 100,
+                    nodeOverlap: 20,
+                    refresh: 20,
+                    fit: true,
+                    padding: 30,
+                    randomize: false,
+                    componentSpacing: 100,
+                    nodeRepulsion: 400000,
+                    edgeElasticity: 100,
+                    nestingFactor: 5,
+                    animate: true
+                });
+                layout.run();
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            graphMode.options[graphMode.selectedIndex].text = prevText;
+            graphMode.disabled = false;
+        }
     };
 
     const setupClickEvents = () => {
