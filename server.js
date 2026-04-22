@@ -4,6 +4,19 @@ const cors = require('cors');
 const axios = require('axios');
 const path = require('path');
 
+let apiCallCount = 0;
+
+// Track all outgoing Steam API calls
+axios.interceptors.request.use((config) => {
+    if (config.url && config.url.includes('steampowered.com')) {
+        apiCallCount++;
+        console.log(`[Steam API Tracker] Outbound Request... Total today (since boot): ${apiCallCount} / 100,000`);
+    }
+    return config;
+}, (error) => {
+    return Promise.reject(error);
+});
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
